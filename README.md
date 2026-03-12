@@ -129,6 +129,34 @@ future.thenAccept(results -> { ... });
 
 ---
 
+## 失败策略、超时、详细结果（推荐在主链路使用）
+
+默认 `invoke()/invokeAsync()` 是 **FAIL_FAST**：任一插件异常会导致整体调用失败（便于在非关键扩展点快速暴露问题）。在主流程扩展点更常见的做法是“插件失败不影响主流程”，这时推荐使用 `invokeDetailed()`：
+
+```java
+import com.plugflow.core.invoke.ErrorStrategy;
+import com.plugflow.core.invoke.InvokeOptions;
+import com.plugflow.core.invoke.PluginCallResult;
+
+InvokeOptions options = InvokeOptions.builder()
+    .errorStrategy(ErrorStrategy.CONTINUE)   // 继续执行，不因单插件失败中断
+    .timeoutPerPlugin(Duration.ofMillis(30)) // 单插件超时（可选）
+    .includeSkipped(true)                   // 返回被灰度/降级/禁用跳过的插件（可选）
+    .build();
+
+List<PluginCallResult<Void>> results =
+    pluginInvoker.invokeDetailed(OrderExtPlugin.class, ctx, options);
+
+for (PluginCallResult<Void> r : results) {
+    if (!r.isSuccess()) {
+        // 可在这里打点、告警、或上报异常原因
+        Throwable err = r.getError();
+    }
+}
+```
+
+---
+
 ## 打包与使用
 
 执行 `mvn clean package` 得到 `plugflow-core-1.0.0-SNAPSHOT.jar`。在其他项目中引入该 JAR（或安装到本地仓库后通过 Maven 依赖引用），即可使用上述注解、注册表与调用器；无需 Spring 时仅依赖 `reflections`，可选引入 `spring-context` / `spring-boot-autoconfigure` 以启用自动配置与从容器获取插件实例。
@@ -152,12 +180,18 @@ future.thenAccept(results -> { ... });
 
 ## 更推荐的企业级用法（建议）
 
-当你把 PlugFlow 当作“主流程扩展点执行器”来用时，通常还会需要这些能力（本项目已预留扩展点，且可以逐步增强）：
+当你把 PlugFlow 当作“主流程扩展点执行器”来用时，建议优先启用/关注这些能力（其中前 3 项本项目已开箱即用）：
 
-- **失败策略**：某个插件失败是否影响主流程（继续/快速失败/收敛异常）
-- **超时控制**：单个插件最大执行时间，避免拖垮主链路
-- **结果封装**：每个插件的执行结果、耗时、异常原因等可观测信息
+- **失败策略**：`FAIL_FAST` / `CONTINUE`，决定单插件失败是否中断整体调用
+- **超时控制**：`timeoutPerPlugin`，避免单插件拖垮主链路
+- **结果封装**：`PluginCallResult`，包含结果/异常/耗时/跳过原因，便于打点与告警
 - **一致性灰度**：基于 userId/tenantId 等做稳定命中，而不是纯随机
 - **插件选择器**：按业务身份/场景（如渠道、租户、版本）过滤插件集合
 
-后续如果你希望我把这些能力也做成开箱即用（含 API 与测试），我可以在当前代码基础上继续完善。
+进一步可增强的核心能力（建议按业务需要选择实现）：
+
+- **并发限流/隔离舱**：控制每个模版的最大并发，避免瞬时风暴
+- **熔断/半开恢复**：结合失败率、超时率动态降级插件
+- **插件生命周期**：初始化/销毁回调（资源复用、连接池等）
+- **可观测性**：内置 metrics/tracing hook（成功率、耗时分布、异常原因聚合）
+- **配置中心集成**：把 enabled/degrade/grayRatio 做成可热更新（你 README 提到的 Diamond 就很适合）

@@ -31,7 +31,6 @@ public final class PluginScanner {
             return;
         }
         Set<Class<?>> pluginClasses = new HashSet<>();
-        Set<Class<?>> templateClasses = new HashSet<>();
 
         for (String pkg : basePackages) {
             if (pkg == null || pkg.isBlank()) continue;
@@ -41,9 +40,7 @@ public final class PluginScanner {
                             .setScanners(Scanners.TypesAnnotated)
             );
             Set<Class<?>> plugin = ref.getTypesAnnotatedWith(Plugin.class);
-            Set<Class<?>> template = ref.getTypesAnnotatedWith(PluginTemplate.class);
             pluginClasses.addAll(plugin);
-            templateClasses.addAll(template);
         }
 
         for (Class<?> impl : pluginClasses) {
