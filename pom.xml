@@ -32,6 +32,13 @@
             <version>3.2.4</version>
             <optional>true</optional>
         </dependency>
+        <!-- 可选：用于 @PostConstruct（Spring Boot 场景通常已自带，单独声明以保证编译稳定） -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>2.1.1</version>
+            <optional>true</optional>
+        </dependency>
         <!-- 类路径扫描，无 Spring 时也可用 -->
         <dependency>
             <groupId>org.reflections</groupId>
@@ -69,6 +76,14 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
         </plugins>

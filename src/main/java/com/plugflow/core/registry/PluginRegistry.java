@@ -1,7 +1,6 @@
 package com.plugflow.core.registry;
 
 import com.plugflow.core.annotation.Plugin;
-import com.plugflow.core.annotation.PluginTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
