@@ -194,4 +194,4 @@ for (PluginCallResult<Void> r : results) {
 - **熔断/半开恢复**：结合失败率、超时率动态降级插件
 - **插件生命周期**：初始化/销毁回调（资源复用、连接池等）
 - **可观测性**：内置 metrics/tracing hook（成功率、耗时分布、异常原因聚合）
-- **配置中心集成**：把 enabled/degrade/grayRatio 做成可热更新（你 README 提到的 Diamond 就很适合）
+- **配置中心集成**：把 enabled/degrade/grayRatio 做成可热更新
